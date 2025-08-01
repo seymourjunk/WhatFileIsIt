@@ -211,8 +211,8 @@ void print_mach_o_64_header_info(const mach_header_64* mach_header)
 
 void print_mach_o_load_command(const load_command* load_cmd, size_t ncmds)
 {
-    printf("\n======== LOAD COMMANDS ========\n");
-    printf("index\tcmd\t\tcmd_size\n");
+    printf("\n============== LOAD COMMANDS ==============\n");
+    printf("index\t\tcmd\t\tcmd_size\n");
     for (size_t i = 0; i < ncmds; i++)
     {
         printf("[%lu]\t%16s\t%d\n", i, get_mach_o_load_command_name_str(load_cmd[i].cmd), load_cmd[i].cmdsize);
