@@ -126,12 +126,60 @@ const char* get_mach_o_filetype_str(uint32_t filetype)
     else if (filetype == 0x0000000A) return "Companion file with only debug sections";
     else if (filetype == 0x0000000B) return "x86_64 kexts";
     else if (filetype == 0x0000000C) return "A file composed of other Mach-Os to be run in the same userspace sharing a single linkedit";
-    else return "Unknown Mach-O file type";
+    else return "Unknown Mach-O filetype";
 }
 
-void get_mach_o_header()
+const char* get_mach_o_load_command_name_str(uint32_t cmd) 
 {
+    if (cmd == 0x1)       return "LC_SEGMENT";
+    else if (cmd == 0x2)  return "LC_SYMTAB";
+    else if (cmd == 0x3)  return "LC_SYMSEG";
+    else if (cmd == 0x4)  return "LC_THREAD";
+    else if (cmd == 0x5)  return "LC_UNIXTHREAD";
+    else if (cmd == 0x6)  return "LC_LOADFVMLIB";
+    else if (cmd == 0x7)  return "LC_IDFVMLIB";
+    else if (cmd == 0x8)  return "LC_IDENT";
+    else if (cmd == 0x9)  return "LC_FVMFILE";
+    else if (cmd == 0xa)  return "LC_PREPAGE";
+    else if (cmd == 0xb)  return "LC_DYSYMTAB";
+    else if (cmd == 0xc)  return "LC_LOAD_DYLIB";
+    else if (cmd == 0xd)  return "LC_ID_DYLIB";
+    else if (cmd == 0xe)  return "LC_LOAD_DYLINKER";
+    else if (cmd == 0xf)  return "LC_ID_DYLINKER";
+    else if (cmd == 0x10) return "LC_PREBOUND_DYLIB";
+    else if (cmd == 0x11) return "LC_ROUTINES";
+    else if (cmd == 0x12) return "LC_SUB_FRAMEWORK";
+    else if (cmd == 0x13) return "LC_SUB_UMBRELLA";
+    else if (cmd == 0x14) return "LC_SUB_CLIENT";
+    else if (cmd == 0x15) return "LC_SUB_LIBRARY";
+    else if (cmd == 0x16) return "LC_TWOLEVEL_HINTS";
+    else if (cmd == 0x17) return "LC_PREBIND_CKSUM";
+    else if ((cmd | LC_REQ_DYLD) == 0x18) return "LC_LOAD_WEAK_DYLIB";
+    else if (cmd == 0x19) return "LC_SEGMENT_64";
+    else if (cmd == 0x1a) return "LC_ROUTINES_64";
+    else if (cmd == 0x1b) return "LC_UUID";
+    else if ((cmd | LC_REQ_DYLD) == 0x1c) return "LC_RPATH";
+    else if (cmd == 0x1d) return "LC_CODE_SIGNATURE";
+    else if (cmd == 0x1e) return "LC_SEGMENT_SPLIT_INFO";
+    else if ((cmd | LC_REQ_DYLD) == 0x1f) return "LC_REEXPORT_DYLIB";
+    else if (cmd == 0x20) return "LC_LAZY_LOAD_DYLIB";
+    else if (cmd == 0x21) return "LC_ENCRYPTION_INFO";
+    else if ((cmd | LC_REQ_DYLD) == 0x22) return "LC_DYLD_INFO";
+    else return "Unknown";
+}
 
+void get_mach_o_load_command(load_command* load_cmd, uint32_t ncmds, FILE* p_file)
+{
+    uint32_t offset = sizeof(mach_header_64);
+
+    for(size_t i = 0; i < ncmds; i++)
+    {
+        fread(&load_cmd[i], sizeof(load_command), 1, p_file);
+        offset += load_cmd[i].cmdsize;
+        fseek(p_file, offset, SEEK_SET);
+    }
+
+    //rewind(p_file); ???
 }
 
 void print_mach_o_32_header_info(const mach_header* mach_header)
@@ -161,16 +209,30 @@ void print_mach_o_64_header_info(const mach_header_64* mach_header)
     printf("reserved: 0x%x\n", mach_header->reserved);
 }
 
+void print_mach_o_load_command(const load_command* load_cmd, size_t ncmds)
+{
+    printf("\n======== LOAD COMMANDS ========\n");
+    printf("index\tcmd\t\tcmd_size\n");
+    for (size_t i = 0; i < ncmds; i++)
+    {
+        printf("[%lu]\t%16s\t%d\n", i, get_mach_o_load_command_name_str(load_cmd[i].cmd), load_cmd[i].cmdsize);
+    }
+}
+
 void start_analyse_mach_o(FILE* p_file)
 {
     bool is_64 = is_mach_o_64(p_file);
     if (is_64)
     {
+        //get mach-o header
         mach_header_64 mach_header;
-        //see without pack
         fread(&mach_header, sizeof(mach_header_64), 1, p_file);
         print_mach_o_64_header_info(&mach_header);
 
+        //get load commands
+        load_command load_cmds[mach_header.ncmds];
+        get_mach_o_load_command(load_cmds, mach_header.ncmds, p_file);
+        print_mach_o_load_command(load_cmds, mach_header.ncmds);
     }
     else 
     {
