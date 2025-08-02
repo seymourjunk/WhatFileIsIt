@@ -187,6 +187,17 @@ const char* get_mach_o_load_command_name_str(uint32_t cmd)
     else return "Unknown";
 }
 
+const char* get_mach_o_seg_flag_str(uint32_t flag)
+{
+    if (flag == 0x1) return "SG_HIGHVM";
+    else if (flag == 0x2) return "SG_FVMLIB";
+    else if (flag == 0x4) return "SG_NORELOC";
+    else if (flag == 0x8) return "SG_PROTECTED_VERSION_1";
+    else if (flag == 0x10) return "SG_READ_ONLY";
+    else if (flag == 0x0) return "default";
+    else return "Unknown Mach-O segment flag";
+}
+
 void get_mach_o_load_command(load_command* load_cmd, uint32_t ncmds, FILE* p_file)
 {
     uint32_t offset = sizeof(mach_header_64);
@@ -238,6 +249,56 @@ void print_mach_o_load_command(const load_command* load_cmd, size_t ncmds)
     }
 }
 
+void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, FILE* p_file, bool is_64)
+{
+    uint32_t offset = sizeof(mach_header_64);
+    if (!is_64) offset = sizeof(mach_header);
+
+    fseek(p_file, offset, SEEK_SET);
+
+    for(size_t i = 0; i < ncmds; i++)
+    {
+        printf("\n============== COMMAND STRUCTURE INFO ==============\n");
+        if (load_cmd[i].cmd == LC_SEGMENT_64)
+        {
+            segment_command_64 seg_cmd;
+            fread(&seg_cmd, sizeof(segment_command_64), 1, p_file);
+
+            printf("cmd: 0x%x (LC_SEGMENT_64)\n", seg_cmd.cmd);
+            printf("cmdsize: %d\n", seg_cmd.cmdsize);
+            printf("segname: %s\n", seg_cmd.segname);
+            printf("vmaddr: 0x%016llx\n", seg_cmd.vmaddr);
+            printf("vmsize: 0x%016llx\n", seg_cmd.vmsize);
+            printf("fileoff: %llu\n", seg_cmd.fileoff);
+            printf("filesize: %llu\n", seg_cmd.filesize);
+            printf("maxprot: 0x%08x\n", seg_cmd.maxprot);
+            printf("initprot: 0x%08x\n", seg_cmd.initprot);
+            printf("nsects: %d\n", seg_cmd.nsects);
+            printf("flags: 0x%x (%s)\n", seg_cmd.flags, get_mach_o_seg_flag_str(seg_cmd.flags));
+        }
+        else if (load_cmd[i].cmd == LC_SEGMENT)
+        {
+            segment_command seg_cmd;
+            fread(&seg_cmd, sizeof(segment_command), 1, p_file);
+
+            printf("cmd: 0x%x (LC_SEGMENT)\n", seg_cmd.cmd);
+            printf("cmdsize: %d\n", seg_cmd.cmdsize);
+            printf("segname: %s\n", seg_cmd.segname);
+            printf("vmaddr: 0x%08x\n", seg_cmd.vmaddr);
+            printf("vmsize: 0x%08x\n", seg_cmd.vmsize);
+            printf("fileoff: %d\n", seg_cmd.fileoff);
+            printf("filesize: %d\n", seg_cmd.filesize);
+            printf("maxprot: 0x%08x\n", seg_cmd.maxprot);
+            printf("initprot: 0x%08x\n", seg_cmd.initprot);
+            printf("nsects: %d\n", seg_cmd.nsects);
+            printf("flags: 0x%x (%s)\n", seg_cmd.flags, get_mach_o_seg_flag_str(seg_cmd.flags));
+        }
+        offset += load_cmd[i].cmdsize;
+        fseek(p_file, offset, SEEK_SET);
+    }
+
+}
+
 void start_analyse_mach_o(FILE* p_file)
 {
     bool is_64 = is_mach_o_64(p_file);
@@ -252,6 +313,9 @@ void start_analyse_mach_o(FILE* p_file)
         load_command load_cmds[mach_header.ncmds];
         get_mach_o_load_command(load_cmds, mach_header.ncmds, p_file);
         print_mach_o_load_command(load_cmds, mach_header.ncmds);
+
+        //get section
+        print_mach_o_cmds_structure(load_cmds, mach_header.ncmds, p_file, is_64);
     }
     else 
     {
