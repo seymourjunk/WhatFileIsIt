@@ -258,13 +258,13 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
 
     for(size_t i = 0; i < ncmds; i++)
     {
-        printf("\n============== COMMAND STRUCTURE INFO ==============\n");
+        printf("\n============== [%lu] COMMAND STRUCTURE INFO ==============\n", i);
         if (load_cmd[i].cmd == LC_SEGMENT_64)
         {
             segment_command_64 seg_cmd;
             fread(&seg_cmd, sizeof(segment_command_64), 1, p_file);
 
-            printf("cmd: 0x%x (LC_SEGMENT_64)\n", seg_cmd.cmd);
+            printf("cmd: 0x%x (%s)\n", seg_cmd.cmd, get_mach_o_load_command_name_str(seg_cmd.cmd));
             printf("cmdsize: %d\n", seg_cmd.cmdsize);
             printf("segname: %s\n", seg_cmd.segname);
             printf("vmaddr: 0x%016llx\n", seg_cmd.vmaddr);
@@ -281,7 +281,7 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             segment_command seg_cmd;
             fread(&seg_cmd, sizeof(segment_command), 1, p_file);
 
-            printf("cmd: 0x%x (LC_SEGMENT)\n", seg_cmd.cmd);
+            printf("cmd: 0x%x (%s)\n", seg_cmd.cmd, get_mach_o_load_command_name_str(seg_cmd.cmd));
             printf("cmdsize: %d\n", seg_cmd.cmdsize);
             printf("segname: %s\n", seg_cmd.segname);
             printf("vmaddr: 0x%08x\n", seg_cmd.vmaddr);
@@ -293,6 +293,24 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("nsects: %d\n", seg_cmd.nsects);
             printf("flags: 0x%x (%s)\n", seg_cmd.flags, get_mach_o_seg_flag_str(seg_cmd.flags));
         }
+        else if (load_cmd[i].cmd == LC_CODE_SIGNATURE ||
+                load_cmd[i].cmd == LC_SEGMENT_SPLIT_INFO ||
+                load_cmd[i].cmd == LC_FUNCTION_STARTS ||
+                load_cmd[i].cmd == LC_DATA_IN_CODE ||
+                load_cmd[i].cmd == LC_DYLIB_CODE_SIGN_DRS ||
+                load_cmd[i].cmd == LC_LINKER_OPTIMIZATION_HINT ||
+                load_cmd[i].cmd == LC_DYLD_EXPORTS_TRIE ||
+                load_cmd[i].cmd == LC_DYLD_CHAINED_FIXUPS)
+        {
+            linkedit_data_command le_data_cmd;
+            fread(&le_data_cmd, sizeof(linkedit_data_command), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", le_data_cmd.cmd, get_mach_o_load_command_name_str(le_data_cmd.cmd));
+            printf("cmdsize: %d\n", le_data_cmd.cmdsize);
+            printf("dataoff: %d\n", le_data_cmd.dataoff);
+            printf("datasize: %d\n", le_data_cmd.datasize);
+        }
+        else printf("Unknown\n");
+        
         offset += load_cmd[i].cmdsize;
         fseek(p_file, offset, SEEK_SET);
     }
