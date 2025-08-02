@@ -293,6 +293,16 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("nsects: %d\n", seg_cmd.nsects);
             printf("flags: 0x%x (%s)\n", seg_cmd.flags, get_mach_o_seg_flag_str(seg_cmd.flags));
         }
+        else if (load_cmd[i].cmd == LC_UUID)
+        {
+            uuid_command uuid_cmd;
+            fread(&uuid_cmd, sizeof(uuid_command), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", uuid_cmd.cmd, get_mach_o_load_command_name_str(uuid_cmd.cmd));
+            printf("cmdsize: %u\n", uuid_cmd.cmdsize);
+            printf("uuid: ");
+            print_hex(uuid_cmd.uuid, 16);
+
+        }
         else if (load_cmd[i].cmd == LC_CODE_SIGNATURE ||
                 load_cmd[i].cmd == LC_SEGMENT_SPLIT_INFO ||
                 load_cmd[i].cmd == LC_FUNCTION_STARTS ||
