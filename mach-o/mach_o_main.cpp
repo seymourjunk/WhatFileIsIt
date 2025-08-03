@@ -299,9 +299,15 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             fread(&uuid_cmd, sizeof(uuid_command), 1, p_file);
             printf("cmd: 0x%x (%s)\n", uuid_cmd.cmd, get_mach_o_load_command_name_str(uuid_cmd.cmd));
             printf("cmdsize: %u\n", uuid_cmd.cmdsize);
-            printf("uuid: ");
-            print_hex(uuid_cmd.uuid, 16);
-
+            printf("uuid: "); print_hex(uuid_cmd.uuid, 16); printf("\n");
+        }
+        else if (load_cmd[i].cmd == LC_RPATH)
+        {
+            rpath_command rpath_cmd;
+            fread(&rpath_cmd, sizeof(rpath_cmd), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", rpath_cmd.cmd, get_mach_o_load_command_name_str(rpath_cmd.cmd));
+            printf("cmdsize: %u\n", rpath_cmd.cmdsize);
+            printf("path: %s\n", rpath_cmd.path);
         }
         else if (load_cmd[i].cmd == LC_CODE_SIGNATURE ||
                 load_cmd[i].cmd == LC_SEGMENT_SPLIT_INFO ||
