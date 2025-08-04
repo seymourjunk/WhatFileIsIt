@@ -140,7 +140,7 @@ const char* get_mach_o_load_command_name_str(uint32_t cmd)
     else if (cmd == 0x7)  return "LC_IDFVMLIB"; //obsolete
     else if (cmd == 0x8)  return "LC_IDENT"; //obsolete
     else if (cmd == 0x9)  return "LC_FVMFILE";
-    else if (cmd == 0xa)  return "LC_PREPAGE";
+    else if (cmd == 0xa)  return "LC_PREPAGE"; //internal use
     else if (cmd == 0xb)  return "LC_DYSYMTAB";
     else if (cmd == 0xc)  return "LC_LOAD_DYLIB";
     else if (cmd == 0xd)  return "LC_ID_DYLIB";
@@ -296,13 +296,38 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
         else if (load_cmd[i].cmd == LC_SYMTAB)
         {
             symtab_command symtab_cmd;
-            fread(&symtab_cmd, sizeof(symtab_cmd), 1, p_file);
+            fread(&symtab_cmd, sizeof(symtab_command), 1, p_file);
             printf("cmd: 0x%x (%s)\n", symtab_cmd.cmd, get_mach_o_load_command_name_str(symtab_cmd.cmd));
             printf("cmdsize: %u\n", symtab_cmd.cmdsize);
             printf("symoff: %u\n", symtab_cmd.symoff);
             printf("nsyms: %u\n", symtab_cmd.nsyms);
             printf("stroff: %u\n", symtab_cmd.stroff);
             printf("strsize: %u\n", symtab_cmd.strsize);
+        }
+        else if (load_cmd[i].cmd == LC_DYSYMTAB)
+        {
+            dysymtab_command dysymtab_cmd;
+            fread(&dysymtab_cmd, sizeof(dysymtab_command), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", dysymtab_cmd.cmd, get_mach_o_load_command_name_str(dysymtab_cmd.cmd));
+            printf("cmdsize: %u\n", dysymtab_cmd.cmdsize);
+            printf("ilocalsym: %u\n", dysymtab_cmd.ilocalsym);
+            printf("nlocalsym: %u\n", dysymtab_cmd.nlocalsym);
+            printf("iextdefsym: %u\n", dysymtab_cmd.iextdefsym);
+            printf("nextdefsym: %u\n", dysymtab_cmd.nextdefsym);
+            printf("iundefsym: %u\n", dysymtab_cmd.iundefsym);
+            printf("nundefsym: %u\n", dysymtab_cmd.nundefsym);
+            printf("tocoff: %u\n", dysymtab_cmd.tocoff);
+            printf("ntoc: %u\n", dysymtab_cmd.ntoc);
+            printf("modtaboff: %u\n", dysymtab_cmd.modtaboff);
+            printf("nmodtab: %u\n", dysymtab_cmd.nmodtab);
+            printf("extrefsymoff: %u\n", dysymtab_cmd.extrefsymoff);
+            printf("nextrefsyms: %u\n", dysymtab_cmd.nextrefsyms);
+            printf("indirectsymoff: %u\n", dysymtab_cmd.indirectsymoff);
+            printf("nindirectsyms: %u\n", dysymtab_cmd.nindirectsyms);
+            printf("extreloff: %u\n", dysymtab_cmd.extreloff);
+            printf("nextrel: %u\n", dysymtab_cmd.nextrel);
+            printf("locreloff: %u\n", dysymtab_cmd.locreloff);
+            printf("nlocrel: %u\n", dysymtab_cmd.nlocrel);
         }
         else if (load_cmd[i].cmd == LC_THREAD || load_cmd[i].cmd == LC_UNIXTHREAD)
         {
