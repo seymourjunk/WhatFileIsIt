@@ -133,7 +133,7 @@ const char* get_mach_o_load_command_name_str(uint32_t cmd)
 {
     if (cmd == 0x1)       return "LC_SEGMENT";
     else if (cmd == 0x2)  return "LC_SYMTAB";
-    else if (cmd == 0x3)  return "LC_SYMSEG";
+    else if (cmd == 0x3)  return "LC_SYMSEG"; //obsolete
     else if (cmd == 0x4)  return "LC_THREAD";
     else if (cmd == 0x5)  return "LC_UNIXTHREAD";
     else if (cmd == 0x6)  return "LC_LOADFVMLIB";
@@ -293,6 +293,26 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("nsects: %d\n", seg_cmd.nsects);
             printf("flags: 0x%x (%s)\n", seg_cmd.flags, get_mach_o_seg_flag_str(seg_cmd.flags));
         }
+        else if (load_cmd[i].cmd == LC_SYMTAB)
+        {
+            symtab_command symtab_cmd;
+            fread(&symtab_cmd, sizeof(symtab_cmd), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", symtab_cmd.cmd, get_mach_o_load_command_name_str(symtab_cmd.cmd));
+            printf("cmdsize: %u\n", symtab_cmd.cmdsize);
+            printf("symoff: %u\n", symtab_cmd.symoff);
+            printf("nsyms: %u\n", symtab_cmd.nsyms);
+            printf("stroff: %u\n", symtab_cmd.stroff);
+            printf("strsize: %u\n", symtab_cmd.strsize);
+        }
+        else if (load_cmd[i].cmd == LC_THREAD || load_cmd[i].cmd == LC_UNIXTHREAD)
+        {
+            //now LC_MAIN often replace LC_UNIXTHREAD
+            //these cmd contain a machine-dependent representation of the thread's initial state
+            thread_command thread_cmd;
+            fread(&thread_cmd, sizeof(thread_command), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", thread_cmd.cmd, get_mach_o_load_command_name_str(thread_cmd.cmd));
+            printf("cmdsize: %u\n", thread_cmd.cmdsize);
+        }
         else if (load_cmd[i].cmd == LC_UUID)
         {
             uuid_command uuid_cmd;
@@ -307,7 +327,7 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             fread(&rpath_cmd, sizeof(rpath_cmd), 1, p_file);
             printf("cmd: 0x%x (%s)\n", rpath_cmd.cmd, get_mach_o_load_command_name_str(rpath_cmd.cmd));
             printf("cmdsize: %u\n", rpath_cmd.cmdsize);
-            printf("path: %s\n", rpath_cmd.path);
+            //print union lc_str for rpath_cmd.path
         }
         else if (load_cmd[i].cmd == LC_CODE_SIGNATURE ||
                 load_cmd[i].cmd == LC_SEGMENT_SPLIT_INFO ||
