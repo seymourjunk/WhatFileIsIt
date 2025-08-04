@@ -136,9 +136,9 @@ const char* get_mach_o_load_command_name_str(uint32_t cmd)
     else if (cmd == 0x3)  return "LC_SYMSEG"; //obsolete
     else if (cmd == 0x4)  return "LC_THREAD";
     else if (cmd == 0x5)  return "LC_UNIXTHREAD";
-    else if (cmd == 0x6)  return "LC_LOADFVMLIB";
-    else if (cmd == 0x7)  return "LC_IDFVMLIB";
-    else if (cmd == 0x8)  return "LC_IDENT";
+    else if (cmd == 0x6)  return "LC_LOADFVMLIB"; //obsolete
+    else if (cmd == 0x7)  return "LC_IDFVMLIB"; //obsolete
+    else if (cmd == 0x8)  return "LC_IDENT"; //obsolete
     else if (cmd == 0x9)  return "LC_FVMFILE";
     else if (cmd == 0xa)  return "LC_PREPAGE";
     else if (cmd == 0xb)  return "LC_DYSYMTAB";
@@ -312,6 +312,16 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             fread(&thread_cmd, sizeof(thread_command), 1, p_file);
             printf("cmd: 0x%x (%s)\n", thread_cmd.cmd, get_mach_o_load_command_name_str(thread_cmd.cmd));
             printf("cmdsize: %u\n", thread_cmd.cmdsize);
+        }
+        else if (load_cmd[i].cmd == LC_FVMFILE)
+        {
+            //this command is reserved for internal use, the kernel ignores this command when loading a program into memory
+            fvmfile_command fvmfile_cmd;
+            fread(&fvmfile_cmd, sizeof(fvmfile_command), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", fvmfile_cmd.cmd, get_mach_o_load_command_name_str(fvmfile_cmd.cmd));
+            printf("cmdsize: %u\n", fvmfile_cmd.cmdsize);
+            // lc_str name
+            printf("header_addr: 0x%08x\n", fvmfile_cmd.header_addr);
         }
         else if (load_cmd[i].cmd == LC_UUID)
         {
