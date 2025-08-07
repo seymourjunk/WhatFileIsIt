@@ -392,9 +392,22 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
         {
             rpath_command rpath_cmd;
             fread(&rpath_cmd, sizeof(rpath_cmd), 1, p_file);
+            uint32_t str_len = rpath_cmd.cmdsize-rpath_cmd.path.offset;
+            char path[str_len];
+            fseek(p_file, offset+rpath_cmd.path.offset, SEEK_SET);
+            fread(path, 1, str_len, p_file);
             printf("cmd: 0x%x (%s)\n", rpath_cmd.cmd, get_mach_o_load_command_name_str(rpath_cmd.cmd));
             printf("cmdsize: %u\n", rpath_cmd.cmdsize);
-            //print union lc_str for rpath_cmd.path
+            printf("path: %s (offset: %d)\n", path, rpath_cmd.path.offset);
+        }
+        else if (load_cmd[i].cmd == LC_MAIN)
+        {
+            entry_point_command entry_cmd;
+            fread(&entry_cmd, sizeof(entry_point_command), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", entry_cmd.cmd, get_mach_o_load_command_name_str(entry_cmd.cmd));
+            printf("cmdsize: %u\n", entry_cmd.cmdsize);
+            printf("entryoff: %llu\n", entry_cmd.entryoff);
+            printf("stacksize: %llu\n", entry_cmd.stacksize);
         }
         else if (load_cmd[i].cmd == LC_CODE_SIGNATURE ||
                 load_cmd[i].cmd == LC_SEGMENT_SPLIT_INFO ||
