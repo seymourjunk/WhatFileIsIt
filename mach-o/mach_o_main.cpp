@@ -258,7 +258,7 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
 
     for(size_t i = 0; i < ncmds; i++)
     {
-        printf("\n============== [%lu] COMMAND STRUCTURE INFO ==============\n", i);
+        printf("\n============== [%lu] COMMAND STRUCTURE INFO (offset:0x%x) ==============\n", i, offset);
         if (load_cmd[i].cmd == LC_SEGMENT_64)
         {
             segment_command_64 seg_cmd;
@@ -328,6 +328,23 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("nextrel: %u\n", dysymtab_cmd.nextrel);
             printf("locreloff: %u\n", dysymtab_cmd.locreloff);
             printf("nlocrel: %u\n", dysymtab_cmd.nlocrel);
+        }
+        else if (load_cmd[i].cmd == LC_LOAD_DYLIB)
+        {
+            dylib_command dylib_cmd;
+            fread(&dylib_cmd, sizeof(dylib_command), 1, p_file);
+            uint32_t str_len = dylib_cmd.cmdsize-dylib_cmd.dylib.name.offset;
+            char name[str_len];
+            char timestamp[30];
+            fseek(p_file, offset+dylib_cmd.dylib.name.offset, SEEK_SET);
+            fread(name, 1, str_len, p_file);
+            printf("cmd: 0x%x (%s)\n", dylib_cmd.cmd, get_mach_o_load_command_name_str(dylib_cmd.cmd));
+            printf("cmdsize: %u\n", dylib_cmd.cmdsize);
+            printf("name: %s (offset: %d)\n", name, dylib_cmd.dylib.name.offset);
+            convert_epoch_timestamp(timestamp, str_len, dylib_cmd.dylib.timestamp);
+            printf("timestamp: %s\n", timestamp);
+            printf("current_version: 0x%x\n", dylib_cmd.dylib.current_version);
+            printf("compatibility_version: 0x%x\n", dylib_cmd.dylib.compatibility_version);
         }
         else if (load_cmd[i].cmd == LC_THREAD || load_cmd[i].cmd == LC_UNIXTHREAD)
         {
