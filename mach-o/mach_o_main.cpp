@@ -347,6 +347,20 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("current_version: 0x%x\n", dylib_cmd.dylib.current_version);
             printf("compatibility_version: 0x%x\n", dylib_cmd.dylib.compatibility_version);
         }
+        else if (load_cmd[i].cmd == LC_LOAD_DYLINKER || load_cmd[i].cmd == LC_ID_DYLINKER
+                || load_cmd[i].cmd == LC_DYLD_ENVIRONMENT)
+        {
+            dylinker_command dylinker_cmd;
+            fread(&dylinker_cmd, sizeof(dylinker_command), 1, p_file);
+            uint32_t str_len = dylinker_cmd.cmdsize-dylinker_cmd.name.offset;
+            char name[str_len];
+            fseek(p_file, offset+dylinker_cmd.name.offset, SEEK_SET);
+            fread(name, 1, str_len, p_file);
+        
+            printf("cmd: 0x%x (%s)\n", dylinker_cmd.cmd, get_mach_o_load_command_name_str(dylinker_cmd.cmd));
+            printf("cmdsize: %u\n", dylinker_cmd.cmdsize);
+            printf("name: %s (offset: %d)\n", name, dylinker_cmd.name.offset);
+        }
         else if (load_cmd[i].cmd == LC_THREAD || load_cmd[i].cmd == LC_UNIXTHREAD)
         {
             //now LC_MAIN often replace LC_UNIXTHREAD
