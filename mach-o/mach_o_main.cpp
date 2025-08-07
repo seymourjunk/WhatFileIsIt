@@ -329,7 +329,8 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("locreloff: %u\n", dysymtab_cmd.locreloff);
             printf("nlocrel: %u\n", dysymtab_cmd.nlocrel);
         }
-        else if (load_cmd[i].cmd == LC_LOAD_DYLIB)
+        else if (load_cmd[i].cmd == LC_LOAD_DYLIB || load_cmd[i].cmd == LC_ID_DYLIB
+                || load_cmd[i].cmd == LC_REEXPORT_DYLIB || load_cmd[i].cmd == LC_LOAD_WEAK_DYLIB)
         {
             dylib_command dylib_cmd;
             fread(&dylib_cmd, sizeof(dylib_command), 1, p_file);
