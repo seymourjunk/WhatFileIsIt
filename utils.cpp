@@ -23,3 +23,11 @@ void convert_epoch_timestamp(char* str_ptr, size_t size, uint32_t timestamp)
 
     strftime(str_ptr, size, "%a %d-%m-%Y %H:%M:%S", time_info);
 }
+
+void get_version_encoded_in_nibbles(uint32_t version, uint16_t* x, uint8_t* y, uint8_t* z)
+{
+    //X.Y.Z is encoded in nibbles xxxx.yy.zz
+    *x = (version >> 16) & 0xffff;
+    *y = (version >> 8) & 0xff;
+    *z = version & 0xff;
+}
