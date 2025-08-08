@@ -356,6 +356,7 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
                 || load_cmd[i].cmd == LC_REEXPORT_DYLIB || load_cmd[i].cmd == LC_LOAD_WEAK_DYLIB)
         {
             dylib_command dylib_cmd;
+            uint16_t x; uint8_t y, z;
             fread(&dylib_cmd, sizeof(dylib_command), 1, p_file);
             uint32_t str_len = dylib_cmd.cmdsize-dylib_cmd.dylib.name.offset;
             char name[str_len];
@@ -367,8 +368,10 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("name: %s (offset: %d)\n", name, dylib_cmd.dylib.name.offset);
             convert_epoch_timestamp(timestamp, str_len, dylib_cmd.dylib.timestamp);
             printf("timestamp: %s\n", timestamp);
-            printf("current_version: 0x%x\n", dylib_cmd.dylib.current_version);
-            printf("compatibility_version: 0x%x\n", dylib_cmd.dylib.compatibility_version);
+            get_version_encoded_in_nibbles(dylib_cmd.dylib.current_version, &x, &y, &z);
+            printf("current_version: %d.%d.%d\n", x, y, z);
+            get_version_encoded_in_nibbles(dylib_cmd.dylib.compatibility_version, &x, &y, &z);
+            printf("compatibility_version: %d.%d.%d\n", x, y, z);
         }
         else if (load_cmd[i].cmd == LC_LOAD_DYLINKER || load_cmd[i].cmd == LC_ID_DYLINKER
                 || load_cmd[i].cmd == LC_DYLD_ENVIRONMENT)
