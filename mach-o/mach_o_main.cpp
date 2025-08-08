@@ -198,6 +198,29 @@ const char* get_mach_o_seg_flag_str(uint32_t flag)
     else return "Unknown Mach-O segment flag";
 }
 
+const char* get_mach_o_platform_str(uint32_t platform)
+{
+    if (platform == 1) return "PLATFORM_MACOS";
+    else if (platform == 2) return "PLATFORM_IOS";
+    else if (platform == 3) return "PLATFORM_IOS";
+    else if (platform == 4) return "PLATFORM_WATCHOS";
+    else if (platform == 5) return "PLATFORM_BRIDGEOS";
+    else if (platform == 6) return "PLATFORM_MACCATALYST";
+    else if (platform == 7) return "PLATFORM_IOSSIMULATOR";
+    else if (platform == 8) return "PLATFORM_TVOSSIMULATOR";
+    else if (platform == 9) return "PLATFORM_WATCHOSSIMULATOR";
+    else if (platform == 10) return "PLATFORM_DRIVERKIT";
+    else return "Unknown Mach-O platform value";
+}
+
+const char* get_mach_o_tool_str(uint32_t tool)
+{
+    if (tool == 1) return "TOOL_CLANG";
+    else if (tool == 2) return "TOOL_SWIFT";
+    else if (tool == 3) return "TOOL_LD";
+    else return "Unknown Mach-O tool";
+}
+
 void get_mach_o_load_command(load_command* load_cmd, uint32_t ncmds, FILE* p_file)
 {
     uint32_t offset = sizeof(mach_header_64);
@@ -408,6 +431,25 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("cmdsize: %u\n", entry_cmd.cmdsize);
             printf("entryoff: %llu\n", entry_cmd.entryoff);
             printf("stacksize: %llu\n", entry_cmd.stacksize);
+        }
+        else if (load_cmd[i].cmd == LC_BUILD_VERSION)
+        {
+            build_version_command build_cmd;
+            uint16_t x; uint8_t y, z;
+            fread(&build_cmd, sizeof(build_version_command), 1, p_file);
+            printf("cmd: 0x%x (%s)\n", build_cmd.cmd, get_mach_o_load_command_name_str(build_cmd.cmd));
+            printf("cmdsize: %u\n", build_cmd.cmdsize);
+            printf("platform: %u (%s)\n", build_cmd.platform, get_mach_o_platform_str(build_cmd.platform));
+            get_version_encoded_in_nibbles(build_cmd.minos, &x, &y, &z);
+            printf("minos: %d.%d.%d\n", x, y, z);
+            get_version_encoded_in_nibbles(build_cmd.sdk, &x, &y, &z);
+            printf("sdk: %d.%d.%d\n", x, y, z);
+            printf("ntools: %u\n", build_cmd.ntools);
+
+            build_tool_version build_tool_ver;
+            fread(&build_tool_ver, sizeof(build_tool_version), 1, p_file);
+            printf("tool: %u (%s)\n", build_tool_ver.tool, get_mach_o_tool_str(build_tool_ver.tool));
+            printf("version: 0x%x\n", build_tool_ver.version);
         }
         else if (load_cmd[i].cmd == LC_CODE_SIGNATURE ||
                 load_cmd[i].cmd == LC_SEGMENT_SPLIT_INFO ||

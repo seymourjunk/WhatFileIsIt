@@ -11,6 +11,8 @@ const char* get_mach_o_cpusubtype_str(int cpusubtype);
 const char* get_mach_o_filetype_str(uint32_t filetype);
 const char* get_mach_o_load_command_name_str(uint32_t cmd);
 const char* get_mach_o_seg_flag_str(uint32_t flag);
+const char* get_mach_o_platform_str(uint32_t platform);
+const char* get_mach_o_tool_str(uint32_t tool);
 void get_mach_o_load_command(load_command* load_cmd, uint32_t ncmds, FILE* p_file);
 //print_filetype() for flag description
 void get_mach_o_header(FILE* p_file);
