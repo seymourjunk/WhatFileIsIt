@@ -18,6 +18,8 @@ void get_mach_o_load_command(load_command* load_cmd, uint32_t ncmds, FILE* p_fil
 void get_mach_o_header(FILE* p_file);
 void print_mach_o_32_header_info(const mach_header* mach_header);
 void print_mach_o_64_header_info(const mach_header_64* mach_header);
+void print_mach_o_section_32(const section* section);
+void print_mach_o_section_64(const section_64* section);
 void print_mach_o_load_command(const load_command* load_cmd);
 void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, FILE* p_file); //need store it later
 void start_analyse_mach_o(FILE* p_file);

@@ -272,6 +272,37 @@ void print_mach_o_load_command(const load_command* load_cmd, size_t ncmds)
     }
 }
 
+void print_mach_o_section_32(const section* section)
+{
+    printf("sectname: %s\n", section->sectname);
+    printf("segname: %s\n", section->segname);
+    printf("addr: 0x%08x\n", section->addr);
+    printf("size: %u\n", section->size);
+    printf("offset: 0x%x\n", section->offset);
+    printf("align (power of 2): %u\n", section->align);
+    printf("reloff: 0x%x\n", section->reloff);
+    printf("nreloc: %u\n", section->nreloc);
+    printf("flags: 0x%08x\n", section->flags);
+    printf("reserved1 (for offset or index): %u\n", section->reserved1);
+    printf("reserved2: %u\n", section->reserved2);
+}
+
+void print_mach_o_section_64(const section_64* section)
+{
+    printf("sectname: %s\n", section->sectname);
+    printf("segname: %s\n", section->segname);
+    printf("addr: 0x%016llx\n", section->addr);
+    printf("size: %llu\n", section->size);
+    printf("offset: 0x%x\n", section->offset);
+    printf("align (power of 2): %u\n", section->align);
+    printf("reloff: 0x%x\n", section->reloff);
+    printf("nreloc: %u\n", section->nreloc);
+    printf("flags: 0x%08x\n", section->flags);
+    printf("reserved1 (for offset or index): %u\n", section->reserved1);
+    printf("reserved2 (for count or sizeof): %u\n", section->reserved2);
+    printf("reserved3: %u\n", section->reserved3);
+}
+
 void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, FILE* p_file, bool is_64)
 {
     uint32_t offset = sizeof(mach_header_64);
@@ -298,6 +329,14 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("initprot: 0x%08x\n", seg_cmd.initprot);
             printf("nsects: %d\n", seg_cmd.nsects);
             printf("flags: 0x%x (%s)\n", seg_cmd.flags, get_mach_o_seg_flag_str(seg_cmd.flags));
+
+            for (size_t i = 0; i < seg_cmd.nsects; i++)
+            {
+                printf("\n=========== [%lu] SECTION (%s segment) ===========\n", i, seg_cmd.segname);
+                section_64 section;
+                fread(&section, sizeof(section_64), 1, p_file);
+                print_mach_o_section_64(&section);
+            }
         }
         else if (load_cmd[i].cmd == LC_SEGMENT)
         {
@@ -315,6 +354,14 @@ void print_mach_o_cmds_structure(const load_command* load_cmd, uint32_t ncmds, F
             printf("initprot: 0x%08x\n", seg_cmd.initprot);
             printf("nsects: %d\n", seg_cmd.nsects);
             printf("flags: 0x%x (%s)\n", seg_cmd.flags, get_mach_o_seg_flag_str(seg_cmd.flags));
+
+            for (size_t i = 0; i < seg_cmd.nsects; i++)
+            {
+                printf("\n=========== [%lu] SECTION (%s segment) ===========\n", i, seg_cmd.segname);
+                section section;
+                fread(&section, sizeof(section), 1, p_file);
+                print_mach_o_section_32(&section);
+            }
         }
         else if (load_cmd[i].cmd == LC_SYMTAB)
         {
